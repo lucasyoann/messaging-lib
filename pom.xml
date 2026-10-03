@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.marineyoann.messaging</groupId>
+    <artifactId>messaging-lib-parent</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+    <name>messaging-lib</name>
+    <description>Librairie interne de messagerie instantanée (architecture Controller / Service / Repository).</description>
+
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>4.1.1</version>
+        <relativePath/>
+    </parent>
+
+    <!-- 2 modules seulement : le découpage n'a de sens que là où il protège
+         une vraie frontière de dépendance (voir messaging-notifications,
+         qui tire web-push + BouncyCastle et peut être omis par une app qui
+         n'en a pas besoin). Pas de séparation domaine/persistance ici :
+         en architecture Controller/Service/Repository, le Service appelle
+         le Repository directement, sans interface intermédiaire. -->
+    <modules>
+        <module>messaging-lib</module>
+        <module>messaging-notifications</module>
+    </modules>
+
+    <properties>
+        <java.version>25</java.version>
+        <maven.compiler.release>25</maven.compiler.release>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <web-push.version>5.1.2</web-push.version>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>com.marineyoann.messaging</groupId>
+                <artifactId>messaging-lib</artifactId>
+                <version>1.0.0-SNAPSHOT</version>
+            </dependency>
+            <dependency>
+                <groupId>com.marineyoann.messaging</groupId>
+                <artifactId>messaging-notifications</artifactId>
+                <version>1.0.0-SNAPSHOT</version>
+            </dependency>
+
+            <!-- Web Push (VAPID) - voir messaging-notifications.
+                 github.com/web-push-libs/webpush-java, MIT, s'appuie sur BouncyCastle -->
+            <dependency>
+                <groupId>nl.martijndwars</groupId>
+                <artifactId>web-push</artifactId>
+                <version>${web-push.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <configuration>
+                        <release>${maven.compiler.release}</release>
+                        <parameters>true</parameters>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+</project>
