@@ -1,0 +1,49 @@
+name: Publish on tag
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  test-and-publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v4
+        with:
+          java-version: '25'
+          distribution: 'temurin'
+          server-id: github
+          settings-path: ${{ github.workspace }}
+
+      - name: Cache des dépendances Maven
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-maven-
+
+      - name: Extraire la version depuis le tag
+        id: version
+        run: echo "value=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+        # GITHUB_REF_NAME = "v1.2.0" -> "value" = "1.2.0"
+
+      - name: Fixer la version Maven sur tous les modules
+        run: |
+          mvn --batch-mode versions:set \
+            -DnewVersion=${{ steps.version.outputs.value }} \
+            -DgenerateBackupPoms=false
+
+      - name: Tests puis publication
+        run: mvn --batch-mode --settings $GITHUB_WORKSPACE/settings.xml clean deploy
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
